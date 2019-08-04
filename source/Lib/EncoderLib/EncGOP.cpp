@@ -1352,7 +1352,7 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
   pcBitstreamRedirect = new OutputBitstream;
   AccessUnit::iterator  itLocationToPushSliceHeaderNALU; // used to store location where NALU containing slice header is to be inserted
 
-  xInitGOP(iPOCLast, iNumPicRcvd, isField
+  xInitGOP(iPOCLast, iNumPicRcvd, isField             //iPOCLast: 这一组(4张)图片中，最后一张的编号   //INPicRecvd: 每组多少张  
          , isEncodeLtRef
   );
 
@@ -1371,12 +1371,12 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
   }
 
   // reset flag indicating whether pictures have been encoded
-  for ( int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
+  for ( int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )  //GOP内picture循环, 这里遍历所有
   {
     m_pcCfg->setEncodedFlag(iGOPid, false);
   }
 
-  for ( int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
+  for ( int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ ) //GOP内picture循环, 这里遍历所有
   {
     if (m_pcCfg->getEfficientFieldIRAPEnabled())
     {
@@ -1393,7 +1393,7 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
     /////////////////////////////////////////////////////////////////////////////////////////////////// Initial to start encoding
     int iTimeOffset;
     int pocCurr;
-    int multipleFactor = m_pcCfg->getUseCompositeRef() ? 2 : 1;
+    int multipleFactor = m_pcCfg->getUseCompositeRef() ? 2 : 1; // 1
 
     if(iPOCLast == 0) //case first frame or first top field
     {
@@ -1407,15 +1407,16 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
     }
     else
     {
-      pocCurr = iPOCLast - iNumPicRcvd * multipleFactor + m_pcCfg->getGOPEntry(iGOPid).m_POC - ((isField && m_iGopSize>1) ? 1 : 0);
-      iTimeOffset = m_pcCfg->getGOPEntry(iGOPid).m_POC;
+      pocCurr = iPOCLast - iNumPicRcvd * multipleFactor + m_pcCfg->getGOPEntry(iGOPid).m_POC - ((isField && m_iGopSize>1) ? 1 : 0);  //No.
+      iTimeOffset = m_pcCfg->getGOPEntry(iGOPid).m_POC;  // 每组GOP的重新顺序
     }
-
-    if (m_pcCfg->getUseCompositeRef() && isEncodeLtRef)
+	//没进
+    if (m_pcCfg->getUseCompositeRef() && isEncodeLtRef) 
     {
       pocCurr++;
       iTimeOffset--;
     }
+	//没进
     if (pocCurr / multipleFactor >= m_pcCfg->getFramesToBeEncoded())
     {
       if (m_pcCfg->getEfficientFieldIRAPEnabled())
@@ -1423,14 +1424,15 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
         iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
       }
       continue;
-    }
+    } 
 
+	//只进入了这里
     if( getNalUnitType(pocCurr, m_iLastIDR, isField) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr, m_iLastIDR, isField) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
       m_iLastIDR = pocCurr;
     }
 
-    // start a new access unit: create an entry in the list of output access units
+    // start a new access unit: create an entry in the list of output access units 
     AccessUnit accessUnit;
     xGetBuffer( rcListPic, rcListPicYuvRecOut,
                 iNumPicRcvd, iTimeOffset, pcPic, pocCurr, isField );
@@ -2119,13 +2121,13 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
 
         list<EncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
         m_pcRateCtrl->getRCPic()->getLCUInitTargetBits();
-        lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture, pcSlice->isIRAP());
-        sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
+        lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture, pcSlice->isIRAP());  //确定当前picture的lambda
+        sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture ); //QP由lambda计算
       }
       else    // normal case
       {
         list<EncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
-        lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture, pcSlice->isIRAP());
+        lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture, pcSlice->isIRAP());  //确定当前picture的lambda
         sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
       }
 
@@ -2302,7 +2304,7 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
       pcSlice->setSliceSegmentCurStartCtuTsAddr( 0 );
 #endif
 
-      for(uint32_t nextCtuTsAddr = 0; nextCtuTsAddr < numberOfCtusInFrame; )
+      for(uint32_t nextCtuTsAddr = 0; nextCtuTsAddr < numberOfCtusInFrame; ) ////这个循环只执行了一次
       {
         m_pcSliceEncoder->precompressSlice( pcPic );
         m_pcSliceEncoder->compressSlice   ( pcPic, false, false );
@@ -2632,7 +2634,7 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
         pcSlice->clearSubstreamSizes(  );
         {
           uint32_t numBinsCoded = 0;
-          m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]), numBinsCoded);
+          m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]), numBinsCoded);  //
           binCountsInNalUnits+=numBinsCoded;
         }
         {
@@ -2736,17 +2738,17 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
           avgLambda = lambda;
         }
 
-        m_pcRateCtrl->getRCPic()->updateAfterPicture( actualHeadBits, actualTotalBits, avgQP, avgLambda, pcSlice->isIRAP());
+        m_pcRateCtrl->getRCPic()->updateAfterPicture( actualHeadBits, actualTotalBits, avgQP, avgLambda, pcSlice->isIRAP()); //编完一帧，更新当前picture level对应的lambda参数值（alpha和beta）
         m_pcRateCtrl->getRCPic()->addToPictureLsit( m_pcRateCtrl->getPicList() );
 
         m_pcRateCtrl->getRCSeq()->updateAfterPic( actualTotalBits );
         if ( !pcSlice->isIRAP() )
         {
-          m_pcRateCtrl->getRCGOP()->updateAfterPicture( actualTotalBits );
+          m_pcRateCtrl->getRCGOP()->updateAfterPicture( actualTotalBits );  //更新
         }
         else    // for intra picture, the estimated bits are used to update the current status in the GOP
         {
-          m_pcRateCtrl->getRCGOP()->updateAfterPicture( estimatedBits );
+          m_pcRateCtrl->getRCGOP()->updateAfterPicture( estimatedBits );  //更新
         }
   #if U0132_TARGET_BITS_SATURATION
         if (m_pcRateCtrl->getCpbSaturationEnabled())
@@ -2942,8 +2944,8 @@ void EncGOP::xInitGOP( int iPOCLast, int iNumPicRcvd, bool isField
 }
 
 
-void EncGOP::xGetBuffer( PicList&                  rcListPic,
-                         std::list<PelUnitBuf*>&   rcListPicYuvRecOut,
+void EncGOP::xGetBuffer( PicList&                  rcListPic,             //1~11存的图片?
+                         std::list<PelUnitBuf*>&   rcListPicYuvRecOut,    //5
                          int                       iNumPicRcvd,
                          int                       iTimeOffset,
                          Picture*&                 rpcPic,
@@ -2954,15 +2956,17 @@ void EncGOP::xGetBuffer( PicList&                  rcListPic,
   //  Rec. output
   std::list<PelUnitBuf*>::iterator     iterPicYuvRec = rcListPicYuvRecOut.end();
 
-  if (isField && pocCurr > 1 && m_iGopSize!=1)
+  if (isField && pocCurr > 1 && m_iGopSize!=1)  //没有进入
   {
     iTimeOffset--;
   }
 
   int multipleFactor = m_pcCfg->getUseCompositeRef() ? 2 : 1;
+
+  // i < (每组Num张 * 1 - 每组GOP的顺序(1234) + 1）---> 循环从4个到1个
   for (i = 0; i < (iNumPicRcvd * multipleFactor - iTimeOffset + 1); i += multipleFactor)
   {
-    iterPicYuvRec--;
+	  iterPicYuvRec--; 
   }
 
   //  Current pic.
@@ -2970,7 +2974,7 @@ void EncGOP::xGetBuffer( PicList&                  rcListPic,
   while (iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic);
-    if (rpcPic->getPOC() == pocCurr)
+    if (rpcPic->getPOC() == pocCurr)  //!
     {
       break;
     }
@@ -2980,7 +2984,7 @@ void EncGOP::xGetBuffer( PicList&                  rcListPic,
   CHECK(!(rpcPic != NULL), "Unspecified error");
   CHECK(!(rpcPic->getPOC() == pocCurr), "Unspecified error");
 
-  (**iterPicYuvRec) = rpcPic->getRecoBuf();
+  (**iterPicYuvRec) = rpcPic->getRecoBuf(); 
   return;
 }
 
